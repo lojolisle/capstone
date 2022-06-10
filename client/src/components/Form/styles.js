@@ -13,6 +13,7 @@ export default makeStyles((theme) => ({
     display: 'flex',
     flexWrap: 'wrap',
     justifyContent: 'center',
+    flexDirection: 'column',
   },
   fileInput: {
     width: '97%',
@@ -21,4 +22,7 @@ export default makeStyles((theme) => ({
   buttonSubmit: {
     marginBottom: 10,
   },
+  suggestion: {
+    cursor: 'pointer',
+  }
 }));

@@ -4,7 +4,7 @@ import * as api from "../api";
 
 // THIS IS OUR ACTION
 //creating an action (this is in action folder previously)
-
+// here "drugs/" should be name of slice
 export const createDrug = createAsyncThunk(
    "drugs/createDrug", 
    async(formData, {rejectWithValue}) => {
@@ -23,13 +23,40 @@ export const getDrugs = createAsyncThunk(
    async(_, {rejectWithValue}) => {
    try {
       const response = await  api.getDrugs();
-      //console.log('Suceess in getDrugs action------', response.data);
+      console.log('Suceess in getDrugs action------', response.data);
       return response.data;
    } catch(error) {
       console.log(error)
       return rejectWithValue(error.response.data);
    }
 });
+
+export const getDrug = createAsyncThunk(
+   "drugs/getDrug",
+   async (id, { rejectWithValue }) => {
+     try {
+       const response = await api.getDrug(id);
+       return response.data;
+     } catch (err) {
+       return rejectWithValue(err.response.data);
+     }
+   }
+ );
+
+ export const updateDrug = createAsyncThunk(
+   "drugs/updateDrug",
+   async ({id, formData}, { rejectWithValue }) => {
+     try {
+        console.log( ' in slice update id '+ id, formData)
+       const response = await api.updateDrug(id, formData);
+       console.log(response.data)
+       return response.data;
+     } catch (err) {
+        console.log(err)
+       return rejectWithValue(err.response.data);
+     }
+   }
+ );
 
 export const deleteDrug = createAsyncThunk(
    "drugs/deleteDrug", 
@@ -45,11 +72,11 @@ export const deleteDrug = createAsyncThunk(
 });
 
 const drugSlice = createSlice({
-  // name: auth
    name: "drugs",
    initialState: {
       drug: {},
       drugs: [],
+      currentId: 0,
       error: "",
       loading: false,
    },
@@ -60,8 +87,10 @@ const drugSlice = createSlice({
       },
       [createDrug.fulfilled]: (state, action) => {
          state.loading = false
-         localStorage.setItem("create", JSON.stringify({...action.payload}));
-         state.drug = action.payload
+         //localStorage.setItem("create", JSON.stringify({...action.payload}));
+         console.log(' in create drug state ---', action)
+         //state.drugs = [...state.drugs, action.payload]
+         state.drugs.push(action.payload);
       },
       [createDrug.rejected]: (state, action) => {
          state.loading = false
@@ -72,13 +101,27 @@ const drugSlice = createSlice({
       },
       [getDrugs.fulfilled]: (state, action) => {
          state.loading = false
-         localStorage.setItem("get", JSON.stringify({...action.payload}));
+         //localStorage.setItem("get", JSON.stringify({...action.payload}));
          state.drugs = action.payload;
          
       },
       [getDrugs.rejected]: (state, action) => {
          state.loading = false
          state.error = action.payload.message;
+      },
+      [getDrug.pending]: (state, action) => {
+         state.loading = true;
+      },
+      [getDrug.fulfilled]: (state, action) => {
+         
+      state.loading = false;
+      state.drug = action.payload;
+      state.currentId = action.payload._id;
+      console.log(' getDrug is fullfilled--', state.currentId)
+      },
+      [getDrug.rejected]: (state, action) => {
+      state.loading = false;
+      state.error = action.payload.message;
       },
       [deleteDrug.pending]: (state, action) => {
          state.loading = true
@@ -94,10 +137,25 @@ const drugSlice = createSlice({
       [deleteDrug.rejected]: (state, action) => {
          state.loading = false
          state.error = action.payload.message;
-      } 
-   
-
+      },
+      [updateDrug.pending]: (state, action) => {
+         state.loading = true
+      },
+      [updateDrug.fulfilled]: (state, action) => {
+         state.loading = false
+         //localStorage.setItem("create", JSON.stringify({...action.payload}));
+         console.log(' in update drug state ---', action.payload._id)
+         //state.drugs = [...state.drugs, action.payload]
+         const updatedDrugs = state.drugs.map((drug) => drug._id === action.payload._id ? action.payload : drug);
+         state.drugs = updatedDrugs;
+      },
+      [updateDrug.rejected]: (state, action) => {
+         console.log(action , action)
+         state.loading = false
+         state.error = action.payload.message;
+      },
    }
 });
 
+ 
 export default drugSlice.reducer;

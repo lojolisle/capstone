@@ -3,25 +3,29 @@ import mongoose from "mongoose";
 
 // list of all endpoints
 
-
 // list all drugs
 //users/signin and signin name
 export const getDrugs = async (req, res) => {
    try {  
-      console.log('in getDrugs server controller ----')
-
       const drugs = await DrugModal.find();
-      console.log(' drugs ', drugs)
       res.status(200).json(drugs);
    } catch(error) {
       res.status(404).json( {message: 'Can not find the drug'});
    }
 }
 
+export const getDrug = async (req, res) => {
+   const { id } = req.params;
+   try {
+     const drug = await DrugModal.findById(id);
+     res.status(200).json(drug);
+   } catch (error) {
+     res.status(404).json({ message: "Something went wrong" });
+   }
+ };
+
 //signup
 export const createDrug = async (req, res) => {
-   console.log('in createDrug server controller ----')
-   console.log(req.body)
    const drugInput = req.body;
    const newDrug = new DrugModal(drugInput);
    try {
@@ -29,7 +33,6 @@ export const createDrug = async (req, res) => {
       res.status(201).json(newDrug);
    }catch(error) {
       res.status(409).json( {message: 'Unsuccessfull in creating a new drug'});
-      console.log('errior---')
    }
 }
 
@@ -48,14 +51,16 @@ export const deleteDrug = async (req, res) => {
 
 export const updateDrug = async (req, res) => {
    const { id } = req.params;
-   const { name, description } = req.body;
+   const { name, direction, strength, description } = req.body;
    try {
      if (!mongoose.Types.ObjectId.isValid(id)) {
        return res.status(404).json({ message: `No drug exist with id: ${id}` });
      }
- 
+
      const updatedDrug = {
        name,
+       direction,
+       strength,
        description,
        _id: id,
      };

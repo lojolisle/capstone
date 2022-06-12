@@ -53,8 +53,8 @@ const Form = ({ currentId, setCurrentId }) => {
          const response = await axios.get(uri, {
             params: {
                filter: text,
-              // _format: "application-json",
-               count:6
+               _format: "application/json",
+               count:7
             }
          })
          setDrugNames(response.data.expansion.contains)
@@ -65,7 +65,8 @@ const Form = ({ currentId, setCurrentId }) => {
    const onChangeHandler = (text) => {
       let matches = [];
       if (text.length > 1) {
-         matches = drugNames.map(dr => {return dr.display.split(" ")[0]})   
+        // matches = drugNames.map(dr => {return dr.display.split(" ")[0]})   
+         matches = drugNames.map(dr => {return dr.display})   
       }
       setText(text);
       setSuggestions(matches)
@@ -74,7 +75,7 @@ const Form = ({ currentId, setCurrentId }) => {
 
    const onSuggestHandler = (text) => {
       setText(text);
-      setFormData({ ...formData, name: text })
+      setFormData({ ...formData, name: text})
       setSuggestions([]);
    }
 
@@ -85,7 +86,7 @@ const Form = ({ currentId, setCurrentId }) => {
          if (formData.name) {
             const response = await axios.get(uri, {
                params: {
-                  name: formData.name,
+                  name: formData.name.split(" ")[0], //+'+200+mg+Tab',
                   search:1
                }
             });
@@ -98,19 +99,19 @@ const Form = ({ currentId, setCurrentId }) => {
    }, [text])
 
 
-
+  // rizatriptan "rizatriptan (88014) is resolved to rizatriptan (88014)"
    const callDIAPi = async () => {
       let drugIds = drugs.map(drug => {return drug.rxnormId})
       drugIds = drugIds.join('+');
-      //const uri =   'https://rxnav.nlm.nih.gov/REST/interaction/list.json?rxcuis=207106+152923+656659'
-      const uri = 'https://rxnav.nlm.nih.gov/REST/interaction/list.json?rxcuis='+ drugIds;  
+  
+      //const uri =   'https://rxnav.nlm.nih.gov/REST/interaction/interaction.json?rxcui=88014';
+      const uri =   'https://rxnav.nlm.nih.gov/REST/interaction/list.json?rxcuis='+ drugIds;  
       const response = await axios.get(uri);
       if (response.data) {
- 
+ console.log(response.data.fullInteractionTypeGroup === undefined);
         setDrugInteractionDetails(
            {'disclaimer': response.data.nlmDisclaimer,
-            'interactionResults': response.data.fullInteractionTypeGroup[0].fullInteractionType
-            });
+            'interactionResults': (response.data.fullInteractionTypeGroup !== undefined) ?response.data.fullInteractionTypeGroup[0].fullInteractionType : ''           });
       } else {
          console.log( ' something went wrong in drug interaction API call')
       }
@@ -125,6 +126,7 @@ const Form = ({ currentId, setCurrentId }) => {
          dispatch(createDrug(formData)); // this is how we pass data from form. dispatch will dispatch the formdata on component load and then it will hit api in slice which will then call
          clear();
       } else {
+         console.log(' update ', formData)
          dispatch(updateDrug({id, formData}));
          clear();
       }
@@ -144,8 +146,8 @@ const Form = ({ currentId, setCurrentId }) => {
                <Button variant="contained" color="secondary" size="small" onClick={clear} fullWidth>Clear</Button>
             </form>
          </Paper>
-         <Paper className={classes.paper}>
-            <Button variant="contained" color="secondary" size="small" onClick={callDIAPi} fullWidth>Drug Interaction Checker</Button>
+         <Paper className={classes.paper} style={{marginTop: 20}}>
+            <Button variant="contained" color="primary" size="small" onClick={callDIAPi} fullWidth>Drug Interaction Checker</Button>
          </Paper>
          <Popup
             openPopup = {openPopup}

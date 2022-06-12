@@ -1,19 +1,22 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import React, { useState, useEffect, Component } from "react";
+//import { useNavigate, useParams } from "react-router-dom";
 //import { Link, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 
 // Notes: useSelector is used to access the state from redux store
-
+import { TextField, Button, Typography, Paper } from '@material-ui/core';
 
 import { createDrug, updateDrug, currentId } from '../../redux/feature/drugSlice';
+import Popup from '../../components/controls/Popup'
 
-import { TextField, Button, Typography, Paper } from '@material-ui/core';
+
 import useStyles from './styles';
 import axios from "axios";
 
-const initialState = { name: '', description: '', direction: '', strength: '' }
- 
+const initialState = { name: '', rxnormId: '', description: '', direction: '', strength: '' }
+const initialDrugInteractionState = {disclaimer: '', interactionResults: ''};
+
+
 const Form = ({ currentId, setCurrentId }) => {
    const [formData, setFormData] = useState( initialState );
 
@@ -22,13 +25,30 @@ const Form = ({ currentId, setCurrentId }) => {
    const {drugs} = drugState; // destructuring
    const drug = useSelector((state) => (currentId ? drugs.find((drug) => drug._id === currentId) : null));
 
+   const dispatch = useDispatch(); // initialising todos
+   const classes = useStyles();
+
    // autocomplete 
    const [drugNames, setDrugNames] = useState([]);
    const [suggestions, setSuggestions] = useState([]);
    const [text, setText] = useState('');
+   const [rxId, setRxId] = useState('');
+   const [checkInteraction, setcheckInteraction] = useState(false);
+   const [drugInteractionDetails, setDrugInteractionDetails] = useState([initialDrugInteractionState]);
+   const [openPopup, setOpenPopup] = useState(false);
 
    useEffect(() => {
-      const loadDrugNames = async() => {
+      if (drug) setFormData(drug);
+    }, [drug]);
+
+   const clear = () => {
+     setCurrentId(0);
+     setFormData({  name: '', rxnormId: '', description: '', direction: '', strength: '' });
+   }; 
+
+
+   useEffect(() => {
+      const autoLoadDrugNames = async() => {
          const uri = 'https://clinicaltables.nlm.nih.gov/fhir/R4/ValueSet/$expand?url=https://clinicaltables.nlm.nih.gov/fhir/R4/ValueSet/rxterms';
          const response = await axios.get(uri, {
             params: {
@@ -39,7 +59,7 @@ const Form = ({ currentId, setCurrentId }) => {
          })
          setDrugNames(response.data.expansion.contains)
       }
-      loadDrugNames();
+      autoLoadDrugNames();
    }, [text])
 
    const onChangeHandler = (text) => {
@@ -58,21 +78,49 @@ const Form = ({ currentId, setCurrentId }) => {
       setSuggestions([]);
    }
 
-   const dispatch = useDispatch(); // initialising todos
-   const classes = useStyles();
 
    useEffect(() => {
-      if (drug) setFormData(drug);
-    }, [drug]);
+      const getRxnormId = async() => {
+         const uri = 'https://rxnav.nlm.nih.gov/REST/rxcui.json';
+         if (formData.name) {
+            const response = await axios.get(uri, {
+               params: {
+                  name: formData.name,
+                  search:1
+               }
+            });
+            if (response.data.idGroup.rxnormId) {
+               setRxId(response.data.idGroup.rxnormId[0]);
+            }
+         }
+      }
+      getRxnormId();
+   }, [text])
 
-   const clear = () => {
-     setCurrentId(0);
-     setFormData({  name: '', description: '', direction: '', strength: '' });
-   };
+
+
+   const callDIAPi = async () => {
+      let drugIds = drugs.map(drug => {return drug.rxnormId})
+      drugIds = drugIds.join('+');
+      //const uri =   'https://rxnav.nlm.nih.gov/REST/interaction/list.json?rxcuis=207106+152923+656659'
+      const uri = 'https://rxnav.nlm.nih.gov/REST/interaction/list.json?rxcuis='+ drugIds;  
+      const response = await axios.get(uri);
+      if (response.data) {
+ 
+        setDrugInteractionDetails(
+           {'disclaimer': response.data.nlmDisclaimer,
+            'interactionResults': response.data.fullInteractionTypeGroup[0].fullInteractionType
+            });
+      } else {
+         console.log( ' something went wrong in drug interaction API call')
+      }
+      setOpenPopup(true)
+   }
 
    const handleSubmit = async (e) => {
       e.preventDefault();
       const id = currentId;
+      formData.rxnormId = rxId;
       if (!currentId) {
          dispatch(createDrug(formData)); // this is how we pass data from form. dispatch will dispatch the formdata on component load and then it will hit api in slice which will then call
          clear();
@@ -81,25 +129,32 @@ const Form = ({ currentId, setCurrentId }) => {
          clear();
       }
    };
+
    return (
-      <Paper className={classes.paper}>
-         <form autoComplete="off" noValidate className={`${classes.root} ${classes.form} ${classes.suggestion}`} onSubmit={handleSubmit}>
-            <Typography variant="h6">{currentId ? `Editing "${drug.name}"` : 'Creating a Drug'}</Typography>
-            <TextField name="name" variant="outlined" label="Drug Name" fullWidth value={formData.name} onChange={(e) => onChangeHandler(e.target.value)/*setFormData({ ...formData, name: e.target.value })*/} />
-            {suggestions && suggestions.map((suggestion, i) => <div key={i} onClick={()=>onSuggestHandler(suggestion)}>{suggestion} </div>)}
-            <TextField name="strength" variant="outlined" label="Strength" fullWidth value={formData.strength} onChange={(e) => setFormData({ ...formData, strength: e.target.value })} />
-            <TextField name="direction" variant="outlined" label="Direction" fullWidth value={formData.direction} onChange={(e) => setFormData({ ...formData, direction: e.target.value })} />
-            <TextField name="description" variant="outlined" label="Description" fullWidth multiline minRows={4} value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} />
-            <Button className={classes.buttonSubmit} variant="contained" color="primary" size="large" type="submit" fullWidth>Submit</Button>
-            <Button variant="contained" color="secondary" size="small" onClick={clear} fullWidth>Clear</Button>
-         </form>
-      </Paper>
+      <>
+         <Paper className={classes.paper}>
+            <form autoComplete="off" noValidate className={`${classes.root} ${classes.form} ${classes.suggestion}`} onSubmit={handleSubmit}>
+               <Typography variant="h6">{currentId ? `Editing "${drug.name}"` : 'Creating a Drug'}</Typography>
+               <TextField name="name" variant="outlined" label="Drug Name" fullWidth value={formData.name} onChange={(e) => onChangeHandler(e.target.value)/*setFormData({ ...formData, name: e.target.value })*/} />
+               {suggestions && suggestions.map((suggestion, i) => <div key={i} onClick={()=>onSuggestHandler(suggestion)}> {suggestion} </div>)}
+               <TextField name="strength" variant="outlined" label="Strength" fullWidth value={formData.strength} onChange={(e) => setFormData({ ...formData, strength: e.target.value })} />
+               <TextField name="direction" variant="outlined" label="Direction" fullWidth value={formData.direction} onChange={(e) => setFormData({ ...formData, direction: e.target.value })} />
+               <TextField name="description" variant="outlined" label="Description" fullWidth multiline minRows={4} value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} />
+               <Button className={classes.buttonSubmit} variant="contained" color="primary" size="large" type="submit" fullWidth>Submit</Button>
+               <Button variant="contained" color="secondary" size="small" onClick={clear} fullWidth>Clear</Button>
+            </form>
+         </Paper>
+         <Paper className={classes.paper}>
+            <Button variant="contained" color="secondary" size="small" onClick={callDIAPi} fullWidth>Drug Interaction Checker</Button>
+         </Paper>
+         <Popup
+            openPopup = {openPopup}
+            setOpenPopup = {setOpenPopup}
+         >
+            {drugInteractionDetails}
+         </Popup>
+      </>
    );
  };
 
 export default Form;
-
-//https://rxnav.nlm.nih.gov/REST/rxcui.json?name=Advil&search=1
-//https://lhncbc.nlm.nih.gov/RxNav/APIs/api-RxNorm.findRxcuiByString.html
-////https://rxnav.nlm.nih.gov/REST/interaction/interaction.json?rxcui=88014&sources=ONCHigh
-//https://lhncbc.nlm.nih.gov/RxNav/APIs/api-Interaction.findDrugInteractions.html

@@ -7,6 +7,7 @@ const drugSchema = mongoose.Schema({
       type: String, 
       required: true
    },
+   rxnormId: String,
    description: String,
    direction: String,
    strength: String,

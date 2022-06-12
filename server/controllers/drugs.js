@@ -51,7 +51,7 @@ export const deleteDrug = async (req, res) => {
 
 export const updateDrug = async (req, res) => {
    const { id } = req.params;
-   const { name, direction, strength, description } = req.body;
+   const { name, rxnormId, direction, strength, description } = req.body;
    try {
      if (!mongoose.Types.ObjectId.isValid(id)) {
        return res.status(404).json({ message: `No drug exist with id: ${id}` });
@@ -59,6 +59,7 @@ export const updateDrug = async (req, res) => {
 
      const updatedDrug = {
        name,
+       rxnormId,
        direction,
        strength,
        description,
@@ -67,6 +68,7 @@ export const updateDrug = async (req, res) => {
      await DrugModal.findByIdAndUpdate(id, updatedDrug, { new: true });
      res.json(updatedDrug);
    } catch (error) {
+      console.log(error)
      res.status(404).json({ message: "Something went wrong while updating" });
    }
  };

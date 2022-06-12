@@ -14,6 +14,7 @@ import { getDrugs } from './redux/feature/drugSlice';
 //console.log ( ' in app.js ---', getDrugs);
 import useStyles from './styles';
 
+
 const App = () => {
   const [currentId, setCurrentId] = useState(0);
   const dispatch = useDispatch();
@@ -43,6 +44,13 @@ const App = () => {
           </Grid>
         </Container>
       </Grow>
+      <Container>
+          <Grid container justifyContent='space-between' alignItems='stretch' spacing={3}>
+              <Grid item xs={12} sm={7}>
+              </Grid>
+             
+          </Grid>
+      </Container>
    </Container>
   );
 };

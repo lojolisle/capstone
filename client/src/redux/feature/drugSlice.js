@@ -10,6 +10,7 @@ export const createDrug = createAsyncThunk(
    "drugs/createDrug", 
    async(formData, {rejectWithValue}) => {
    try {
+      console.log(' save ', formData)
       const response = await  api.createDrug(formData);
       return response.data;
    } catch(error) {

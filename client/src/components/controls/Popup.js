@@ -20,31 +20,27 @@ function Popup(props) {
    const classes = useStyles();
 
    let description = null;
-   let severity = null;
+  
+   let comment = null;
 
    if (children.interactionResults) {
-      const interactionPairs =  children.interactionResults.map((data) => {
-         let str = data.interactionPair.map( x => {return (x)})
-         return (str)
-      });
-console.log('in payt  ', interactionPairs)
-      if (interactionPairs !== undefined) {
-         description = interactionPairs.map((s) => {
-            console.log('s', s)
-        
-         let str3 = s.map( (y, k) => { return (<div key={k}>Severity : {y.severity}</div>) })
-         let str2 = s.map( (y, k) => { return (<div key={k+100}><p>Description:</p><ul key={k+1}><li >{y.description}</li></ul></div>) })
-         return ([str3, str2])
+         const interactionPairs =  children.interactionResults.map((data) => {
+            let str = data.interactionPair.map( x => {return (x)})
+            return (str)
+         });
 
-      })
-
-      }
-
+         if (interactionPairs !== undefined) {
+            description = interactionPairs.map((s) => {
+               // let str3 = s.map( (y, k) => { return (<div key={k}>Severity : {y.severity}</div>) })
+               let str2 = s.map( (y, k) => { return (<div key={k+100}><p>Description : {y.description}</p></div>) })
+               let str1 = s.map( (y, k) => { return (<div key={k+200}><p><strong>Interaction Pair </strong> : {y.interactionConcept[0].sourceConceptItem.name} and {y.interactionConcept[1].sourceConceptItem.name}</p></div>) })
+               return ([str1, str2])
+            });
+         }
    } else {
       description = 'No Interaction found'
    }
-  
-  console.log('Desc', description, severity) 
+
    return (
       <Dialog open={openPopup} maxWidth="md" classes={{ paper: classes.dialogWrapper }}>
          <DialogTitle className={classes.dialogTitle}>
@@ -66,7 +62,7 @@ console.log('in payt  ', interactionPairs)
        
         
          <DialogContent dividers>
-            'Disclaimer : {children.disclaimer}
+            Disclaimer : {children.disclaimer}
          </DialogContent> 
       </Dialog>
    )

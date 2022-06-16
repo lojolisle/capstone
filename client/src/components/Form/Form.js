@@ -105,11 +105,11 @@ const Form = ({ currentId, setCurrentId }) => {
       drugIds = drugIds.join('+');
   
       //const uri =   'https://rxnav.nlm.nih.gov/REST/interaction/interaction.json?rxcui=88014';
-      const uri =   'https://rxnav.nlm.nih.gov/REST/interaction/list.json?rxcuis='+ drugIds;  
+      const uri =   'https://rxnav.nlm.nih.gov/REST/interaction/list.json?rxcuis='+ drugIds +'&source=ONCHigh';  
       const response = await axios.get(uri);
       if (response.data) {
- console.log(response.data.fullInteractionTypeGroup === undefined);
-        setDrugInteractionDetails(
+         console.log(response.data.fullInteractionTypeGroup === undefined);
+         setDrugInteractionDetails(
            {'disclaimer': response.data.nlmDisclaimer,
             'interactionResults': (response.data.fullInteractionTypeGroup !== undefined) ?response.data.fullInteractionTypeGroup[0].fullInteractionType : ''           });
       } else {
@@ -122,6 +122,7 @@ const Form = ({ currentId, setCurrentId }) => {
       e.preventDefault();
       const id = currentId;
       formData.rxnormId = rxId;
+      formData.name = formData.name.toUpperCase();
       if (!currentId) {
          dispatch(createDrug(formData)); // this is how we pass data from form. dispatch will dispatch the formdata on component load and then it will hit api in slice which will then call
          clear();

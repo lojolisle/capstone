@@ -38,7 +38,8 @@ const Drug = ({ drug, setCurrentId }) => {
          <CardContent>
             <Typography variant="body2" color="textSecondary" component="p">{drug.direction}</Typography>
             <Typography variant="body2" color="textSecondary" component="p">{drug.description}</Typography>
-            <Typography variant="body2" color="textSecondary">Created a {moment(drug.createdAt).fromNow()}</Typography>
+            {/* <Typography variant="body2" color="textSecondary">Created a {moment(drug.createdAt).fromNow()}
+            </Typography> */}
          </CardContent>
          <CardActions className={classes.cardActions}>
             <Button size="small" color="primary" onClick={() => handleDelete(drug._id)}><DeleteIcon fontSize="small" />Delete</Button>

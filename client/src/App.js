@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Container, AppBar, Typography, Grow, Grid } from '@material-ui/core';
 import { useDispatch } from 'react-redux'; 
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+
+import { Container, AppBar, Typography, Grow, Grid } from '@material-ui/core';
 
 //import { getDrugs } from './actions/drugs';
 import Drugs from './components/Drugs/Drugs';
@@ -10,8 +12,9 @@ import drugImage from './images/drugImage.png';
 import { getDrugs } from './redux/feature/drugSlice';
 //import Form from './components/Form';
 
+import Login from './components/Login/Login';
+import Register from './components/Register/Register'
 
-//console.log ( ' in app.js ---', getDrugs);
 import useStyles from './styles';
 
 

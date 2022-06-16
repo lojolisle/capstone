@@ -4,6 +4,7 @@ import mongoose from "mongoose";
 import cors from "cors";
 
 import drugRoutes from './routes/drugs.js';
+import userRoutes from './routes/user.js'
 
 const app = express();
 console.log(' in index.js')
@@ -12,8 +13,8 @@ app.use(bodyParser.json({ limit: "30mb", extended: true}));
 app.use(bodyParser.urlencoded({ limit: "30mb", extended: true}));
 app.use(cors());
 
-//app.use('/user', userRouter);
-app.use('/drugs', drugRoutes)
+app.use('/users', userRoutes); //http://localhost:4000/users/signup
+app.use('/drugs', drugRoutes);
 
 // https://www.mpngodb.com/cloud/atlas
 const MONGODB_CONNECTION_URL = "mongodb+srv://lislelojo:eliaMDB67!@cluster0.37aex.mongodb.net/drug_db?retryWrites=true&w=majority"
